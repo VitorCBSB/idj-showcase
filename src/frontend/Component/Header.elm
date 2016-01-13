@@ -90,7 +90,7 @@ pendingReviewsAnchor pendingQuantity =
 header kids =
     div [ style [ "padding" => "10px 0"
                 , "color" => "#333333"
-                , "font-size" => "24px"
+                , "font-size" => "30px"
                 , "margin" => "0"
                 , "text-overflow" => "ellipsis" ] ] kids
 
