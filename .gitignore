@@ -1,0 +1,8 @@
+.stack-work/
+elm-stuff/
+log/
+pages/
+sqlite3.dll
+sqlite3.def
+site_key.txt
+idj-db
