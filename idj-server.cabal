@@ -39,6 +39,7 @@ executable run-server
   other-modules:       Path
                      , Utils
                      , Application
-                     , Routes
+                     , PageRoutes
+                     , ApiRoutes
                      , Types
                      , Query

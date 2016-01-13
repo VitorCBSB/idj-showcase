@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Routes where
+module ApiRoutes where
 
 import Control.Applicative ((<|>))
 import qualified Data.Aeson as Json
@@ -12,29 +12,10 @@ import qualified Data.Text.Encoding as Enc
 import Snap
 import Snap.Snaplet.Auth
 import Snap.Snaplet.SqliteSimple
-import qualified Text.Blaze.Html5 as H
-import qualified Text.Blaze.Html5.Attributes as A
-import qualified Text.Blaze.Html.Renderer.Utf8 as Blaze
 import Text.Read (readMaybe)
 
 import Types
 import Query
-
-handleEverything :: Handler App (AuthManager App) ()
-handleEverything =
-    do  loggedUser <- currentUser
-        loggedText <- case loggedUser of
-                Just user -> case userId user of
-                    Just uid -> do  userRealName <- withTop db $ getUserRealName uid
-                                    return $ T.concat ["HELLO MR(S). ", userRealName, "!"]
-                    Nothing -> return "Where's your id...?"
-                Nothing -> return "HELLO! PLEASE LOGIN!"
-        writeBuilder $ Blaze.renderHtmlBuilder $ H.docTypeHtml $
-            do  H.head $ do
-                    H.meta H.! A.charset "UTF-8"
-                    H.title (H.toHtml ("WOAH!" :: T.Text))
-                H.body $ do
-                    H.p (H.toHtml (loggedText :: T.Text))
 
 handleNewUser :: Handler App (AuthManager App) ()
 handleNewUser =
@@ -108,16 +89,6 @@ getFilteredGames =
         case readMaybe yearParam of
             Just year -> serveGames (ByYear year)
             Nothing -> redirect "/"
-
-notFound :: (MonadSnap m) => m ()
-notFound =
-    do  modifyResponse $ setResponseStatus 404 "Not found"
-        writeBuilder $ Blaze.renderHtmlBuilder $ do
-            H.head $ do
-                H.meta H.! A.charset "UTF-8"
-                H.title (H.toHtml ("Not found" :: T.Text))
-            H.body $ do
-                H.p (H.toHtml ("Não encontrei nada." :: T.Text))
 
 handleGameSubmission :: (MonadSnap m) => m ()
 handleGameSubmission = writeText "Submissão de jogos."
