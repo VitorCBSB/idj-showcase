@@ -17,6 +17,7 @@ import Snap.Util.FileServe (serveDirectory)
 import Types
 import qualified ApiRoutes
 import qualified PageRoutes
+import qualified Path
 
 ------------------------------------------------------------------------------
 
@@ -45,6 +46,6 @@ apiRoutes = [ ("api/new_user/:username/:password/:realname", with auth ApiRoutes
 
 pageRoutes :: [(BS.ByteString, Handler App App ())]
 pageRoutes = [ ("assets", serveDirectory "assets")
-             , ("pages", serveDirectory "pages")
+             , ("artifacts", serveDirectory Path.artifactDirectory)
              , ("", with auth PageRoutes.handleEverything)
              ]
