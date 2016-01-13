@@ -58,6 +58,7 @@ makeHtml moduleName =
         H.head $ do
             H.meta ! charset "UTF-8"
             favicon
+            H.link ! rel "stylesheet" ! href (toValue ("/assets/style.css" :: String))
             H.script ! src (toValue $ "/" ++ Path.artifact moduleName) $ ""
         H.body $
             script $ preEscapedToMarkup $
