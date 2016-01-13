@@ -6,12 +6,13 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 import Snap
 import Snap.Snaplet.Auth
-import qualified Text.Blaze.Html5 as H
-import qualified Text.Blaze.Html5.Attributes as A
+import Text.Blaze.Html5 as H
+import Text.Blaze.Html5.Attributes as A
 import qualified Text.Blaze.Html.Renderer.Utf8 as Blaze
 
 import Types
 import Query
+import qualified Path
 
 handleEverything :: Handler App (AuthManager App) ()
 handleEverything =
@@ -25,9 +26,16 @@ handleEverything =
         writeBuilder $ Blaze.renderHtmlBuilder $ H.docTypeHtml $
             do  H.head $ do
                     H.meta H.! A.charset "UTF-8"
+                    favicon
                     H.title (H.toHtml ("WOAH!" :: T.Text))
                 H.body $ do
                     H.p (H.toHtml (loggedText :: T.Text))
+
+handleLoginPage :: (MonadSnap m) => m ()
+handleLoginPage = servePage ["Page", "Login"]
+
+handleCatalogPage :: (MonadSnap m) => m ()
+handleCatalogPage = servePage ["Page", "Catalog"]
 
 notFound :: (MonadSnap m) => m ()
 notFound =
@@ -39,7 +47,30 @@ notFound =
             H.body $ do
                 H.p (H.toHtml ("Não encontrei nada." :: T.Text))
 
+servePage :: (MonadSnap m) => [String] -> m ()
+servePage moduleName =
+    writeBuilder $ Blaze.renderHtmlBuilder $
+        makeHtml moduleName
+
+makeHtml :: [String] -> H.Html
+makeHtml moduleName =
+    H.docTypeHtml $ do
+        H.head $ do
+            H.meta ! charset "UTF-8"
+            favicon
+            H.script ! src (toValue $ "/" ++ Path.artifact moduleName) $ ""
+        H.body $
+            script $ preEscapedToMarkup $
+                "\nElm.fullscreen(Elm." ++ Path.nameToModule moduleName ++ ")\n"
+
 -- HELPERS
+
+favicon :: H.Html
+favicon =
+  H.link
+    ! A.rel "shortcut icon"
+    ! A.size "16x16, 32x32, 48x48, 64x64, 128x128, 256x256"
+    ! A.href "/assets/favicon.ico"
 
 getParameter :: (MonadSnap m) => BS.ByteString -> (String -> Either String a) -> m a
 getParameter param fromString =

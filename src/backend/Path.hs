@@ -1,20 +1,24 @@
 module Path
     ( artifactDirectory
     , artifact
-    , nameToPath) where
+    , nameToPath
+    , nameToModule) where
 
 import System.FilePath ((</>), (<.>))
 import Data.List (intercalate)
 
 artifactDirectory :: FilePath
-artifactDirectory = "pages"
+artifactDirectory = "artifacts"
 
 artifact :: [String] -> FilePath
-artifact moduleName = 
-    artifactDirectory </> hyphenate moduleName <.> "html"
+artifact moduleName =
+    artifactDirectory </> hyphenate moduleName <.> "js"
 
 nameToPath :: [String] -> FilePath
 nameToPath = foldl1 (</>)
+
+nameToModule :: [String] -> String
+nameToModule = intercalate "."
 
 hyphenate :: [String] -> String
 hyphenate = intercalate "-"

@@ -47,5 +47,7 @@ apiRoutes = [ ("api/new_user/:username/:password/:realname", with auth ApiRoutes
 pageRoutes :: [(BS.ByteString, Handler App App ())]
 pageRoutes = [ ("assets", serveDirectory "assets")
              , ("artifacts", serveDirectory Path.artifactDirectory)
+             , ("login", PageRoutes.handleLoginPage)
+             , ("games", PageRoutes.handleCatalogPage)
              , ("", with auth PageRoutes.handleEverything)
              ]
