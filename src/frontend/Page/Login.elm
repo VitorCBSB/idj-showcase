@@ -11,6 +11,8 @@ import StartApp
 import String
 import Task
 
+import Component.Header as Header
+
 app = StartApp.start
         { init = init
         , update = update
@@ -43,17 +45,24 @@ type alias Model =
     , password : String
     , status : Status
     , message : Maybe String
+    , header : Header.Model
     }
 
 -- INIT
 
 init : (Model, Effects Action)
-init = flip (,) Fx.none <|
-    { name = ""
-    , password = ""
-    , status = Awaiting
-    , message = Nothing
-    }
+init =
+    let
+        (header, headerFx) = Header.init
+    in
+        ({ name = ""
+         , password = ""
+         , status = Awaiting
+         , message = Nothing
+         , header = header
+         },
+         Fx.map UpdateHeader headerFx
+        )
 
 -- UPDATE
 
@@ -63,6 +72,7 @@ type Action =
     | SubmitForm
     | Fail Http.Error
     | ServerResponse (Maybe String)
+    | UpdateHeader Header.Action
     | Dummy -- Should never happen.
 
 update : Action -> Model -> (Model, Effects Action)
@@ -82,6 +92,14 @@ update action model =
                                             | message = Just message
                                             , status = Awaiting
                                             }
+        UpdateHeader headerAction ->
+            let
+                (newHeader, headerFx) =
+                    Header.update headerAction model.header
+            in
+                ( { model | header = newHeader }
+                , Fx.map UpdateHeader headerFx
+                )
         Dummy -> (model, Fx.none) -- Should never happen.
 
 -- EFFECTS
@@ -130,64 +148,71 @@ queryEscape string =
 
 view : Signal.Address Action -> Model -> Html
 view addr model =
-    let isLogging = model.status == Logging in
-    let isFormEmpty =
-            String.isEmpty model.name || String.isEmpty model.password in
-    let userMessage =
-        case model.message of
-            Nothing -> div [] []
-            Just message -> div [] [ text message
-                                   ] in
-    let loginForm =
-        Html.form
-            [ onSubmit addr SubmitForm
-            , action "javascript:void(0);"
-            ]
+    let isLogging = model.status == Logging
 
-            -- Form title
-            [ h2 [] [ text "Login" ]
-            -- Username
-            , div
-                []
-                [ input
-                    [ type' "text"
-                    , placeholder "Nome"
-                    , value model.name
-                    , on "input" targetValue (Signal.message addr << UpdateUsername)
-                    , required True
-                    , disabled isLogging
-                    , size 40
-                    ]
+        isFormEmpty =
+            String.isEmpty model.name || String.isEmpty model.password
+
+        userMessage =
+            case model.message of
+                Nothing -> div [] []
+                Just message -> div [] [ text message
+                                       ]
+        loginForm =
+            Html.form
+                [ onSubmit addr SubmitForm
+                , action "javascript:void(0);"
+                ]
+
+                -- Form title
+                [ h2 [] [ text "Login" ]
+                -- Username
+                , div
                     []
-                ]
-            -- Password
-            , div
-                []
-                [ input
-                    [ type' "password"
-                    , placeholder "Senha"
-                    , value model.password
-                    , on "input" targetValue (Signal.message addr << UpdatePassword)
-                    , required True
-                    , disabled isLogging
-                    , size 40
+                    [ input
+                        [ type' "text"
+                        , placeholder "Nome"
+                        , value model.name
+                        , on "input" targetValue (Signal.message addr << UpdateUsername)
+                        , required True
+                        , disabled isLogging
+                        , size 40
+                        ]
+                        []
                     ]
+                -- Password
+                , div
                     []
+                    [ input
+                        [ type' "password"
+                        , placeholder "Senha"
+                        , value model.password
+                        , on "input" targetValue (Signal.message addr << UpdatePassword)
+                        , required True
+                        , disabled isLogging
+                        , size 40
+                        ]
+                        []
+                    ]
+                -- Submit button
+                , button
+                    [ onClick addr SubmitForm
+                    , disabled (isLogging || isFormEmpty)
+                    ]
+                    [ text "Login!" ]
                 ]
-            -- Submit button
-            , button
-                [ onClick addr SubmitForm
-                , disabled (isLogging || isFormEmpty)
+
+        loginPage =
+            div []
+                [ horizontallyCentered
+                    [ userMessage
+                    , loginForm
+                    , a [href "/"] [ text "Voltar para o inicio" ]
+                    ]
                 ]
-                [ text "Login!" ]
-            ] in
-        div []
-            [ horizontallyCentered
-                [ userMessage
-                , loginForm
-                , a [href "/"] [ text "Voltar para o inicio" ]
-                ]
-            ]
+    in
+        Header.view (Signal.forwardTo addr UpdateHeader) model.header
+            [ loginPage ]
 
 horizontallyCentered : List Html -> Html
 horizontallyCentered contents =
